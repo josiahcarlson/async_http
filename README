@@ -1,0 +1,95 @@
+
+Origin
+======
+
+This package was originally written as a sort of proof-of-concept github gist
+on December 25, 2011 by Josiah Carlson. This updated package is copyright
+2012, and is released under the GNU LGPL v2.1 license.
+
+Description
+===========
+
+This package offers the ability to connect to http servers via the asyncore
+and asynchat modules, in an attempt to download files, or otherwise integrate
+connecting to other services from within asyncore-derived services.
+
+
+Download Files
+==============
+
+The included async_http.get module, which can be used on the command line:
+    $ python -m async_http.get <list of urls>
+
+... will fetch the provided urls in parallel. If you check the source for the
+get.py module, you can see how you can override the http_body(), http_done(),
+and http_close() method to (for example) fetch content remotely and possibly
+redirect it somewhere else.
+
+By properly subclassing from DownloadFile you can serve remote files, similar
+to the requested feature here:
+http://code.google.com/p/pyftpdlib/issues/detail?id=197
+
+
+Make OAuth Requests
+===================
+
+The included async_http.oauth module, which can be used on the command line:
+    $ python -m async_http.oauth ckey,csecret [tkey,tsecret] <url>
+
+... will perform an Oauth 1.0a request against the provided url with the given
+client key and secret, with optional token key and secret (your url will
+determine whether you need a some sort of access or request token).
+
+
+Features
+========
+
+* HTTP/HTTPS
+* redirect support
+* chunked transfer encoding
+* timeouts
+* transparent gzip handling
+  (derived from http://effbot.org/zone/consumer-gzip.htm)
+* OAuth 1.0a client support (no other 3rd party libraries required)
+
+
+API
+===
+
+If you want to write your own handlers for events, subclass from
+_http.AsyncHTTPRequest, and override one or more of the following methods::
+
+    def http_setup(self):
+        '''
+        Called just before the connection is set up. You can manipulate
+        headers, request body, etc.
+        '''
+
+    def http_response(self):
+        '''
+        Called after the response is read. You can handle redirects, perform
+        additional logging, start a reply in a proxy, etc.
+        '''
+
+    def http_body(self):
+        '''
+        Called at the end of every chunk with chunked transfer encoding, and
+        any time data is read for the body otherwise.
+        '''
+
+    def http_chunk(self):
+        '''
+        Called after every chunk with the chunked transfer encoding,
+        immediately after the body callback.
+        '''
+
+    def http_done(self):
+        '''
+        Called when the body has finshed being transferred. This will not be
+        called when there is an error.
+        '''
+
+    def http_close(self):
+        '''
+        Called when the connection has been closed.
+        '''

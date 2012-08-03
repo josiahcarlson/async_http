@@ -35,6 +35,7 @@ class GzipDecoder(object):
             # check if we have a full gzip header
             data = self.head + data
             try:
+                data[2] # for the IndexError on short strings
                 if data[:3] != "\x1f\x8b\x08":
                     raise IOError("invalid gzip data")
                 i = 10
@@ -56,9 +57,6 @@ class GzipDecoder(object):
             data = data[i:]
             self.decoder = zlib.decompressobj(-zlib.MAX_WBITS)
         return self.decoder.decompress(data)
-
-    def flush(self):
-        return self.decoder.flush()
 
 class AsyncHTTPRequest(asynchat.async_chat):
     state = HEADER
@@ -105,7 +103,7 @@ class AsyncHTTPRequest(asynchat.async_chat):
 
     def collect_incoming_data(self, data):
         self.last_read = time.time()
-        if self.gzip:
+        if self.gzip and self.state is not CHUNKED:
             data = self.gzip.feed(data)
         self.incoming.append(data)
 
@@ -162,11 +160,6 @@ class AsyncHTTPRequest(asynchat.async_chat):
             self.state = CHUNKED
 
         else:
-            if self.gzip:
-                data = self.gzip.flush()
-                if data:
-                    self.incoming.append(data)
-                    self.http_body()
             # body is done being received, close the socket
             self.http_body = lambda *args: None
             self.terminator = None

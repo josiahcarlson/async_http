@@ -7,7 +7,7 @@ with open('README') as f:
 
 setup(
     name='async_http',
-    version='.10',
+    version='.11',
     description='An http/https client library that works with asyncore/asynchat',
     author='Josiah Carlson',
     author_email='josiah.carlson@gmail.com',
